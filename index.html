@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>视屏监控系统</title>
+    </head>
+    <body>
+        <div id="my_camera"></div>
+        <img src="" id="img">
+
+        <audio id="player" src="audio/alarm.mp3"  loop="loop"></audio>
+    </body>
+</html>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/webcam.min.js"></script>
+<script language="JavaScript">
+    $(document).ready(function(){
+        setInterval(check,1000);
+    });
+
+    //设置镜头的大小
+    Webcam.set({
+        width: 640,
+        height: 480,
+        image_format: 'jpeg',
+        jpeg_quality: 90,
+        force_flash: true,
+        no_interface_found_text:"未检测到相机的text / html",
+    });
+
+    Webcam.attach('#my_camera');
+
+    //拍照
+    function check() {
+        Webcam.snap(function(data_uri) {
+            $("#img").attr("src", data_uri);
+        });
+        monitor();
+    }
+
+    //图片检查
+    function monitor() {
+        Webcam.upload($("#img").attr("src"), 'monitor.php', function(code, result) {
+            var ret = $.parseJSON(result);
+            if (code == 200) {
+                if (ret.code == 0) {
+                    if (ret.data.alarm) {
+                        //告警
+                        alarm();
+                    }
+                } else {
+                    alert(ret.msg);
+                }
+            } else {
+                alert('系统错误！');
+            }
+        });
+    }
+
+    //播放告警音60秒
+    function alarm() {
+        var player = $("#player")[0]; /*jquery对象转换成js对象*/
+        if (player.paused){ /*如果已经暂停*/
+            player.play(); /*播放*/
+            setTimeout(function(){
+                player.pause();
+            },10000);
+        }
+    }
+</script>
