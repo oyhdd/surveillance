@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>视屏监控系统</title>
+</head>
+<style type="text/css">
+    *{margin:0;padding:0;}
+    body{font-family:"微软雅黑";background-color:#ddd;}
+    .box{width: 1000px;background: #fff;margin: 10px auto; display: table;}
+    .image-info{float: left; margin-left: 10px; margin-top: 10px;}
+    .image-info div{margin-bottom: 5px;}
+    .image-info img{width: 320px; height: 240px}
+    button{cursor:pointer; margin: 20px 0;background: linear-gradient(to right, #2091cf, #0758f0);color: white;padding: 5px 10px;}
+</style>
+<body>
+    <div style="text-align: center;">
+        <label>选择日期：</label>
+        <input id="date" type="date"/>
+        <button id="search">搜索</button>
+        <button id="delete_today">删除当日照片</button>
+        <button id="delete_all">删除所有照片</button>
+    </div>
+
+    <div class="box" id="pic_box">
+    </div>
+</body>
+</html>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var now = new Date();
+        document.getElementById('date').valueAsDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));;
+        showPic();
+        $("#search").click(function () {
+            showPic();
+        });
+
+
+        //删除当日图片
+        $("#delete_today").click(function () {
+            deletePic($('#date').val());
+        });
+
+        //删除所有图片
+        $("#delete_all").click(function () {
+            deletePic('all');
+        });
+    });
+
+    //显示图片
+    function showPic() {
+        $("#pic_box").html('');
+            $.post("pic.php",{date: $('#date').val()}, function(result){
+                var ret = $.parseJSON(result);
+                if (ret.code == 0) {
+                    var images = ret.data;
+                    var html = "";
+                    for( var time in images) {
+                        html += '<div class="image-info">';
+                        html += '<img src="' + images[time] + '"/>';
+                        html += "<div>" + time + "</div>";
+                        html += "</div>";
+                    }
+                    $("#pic_box").html(html);
+                }
+            });
+    }
+
+    //删除图片
+    function deletePic(date) {
+        $.post("delete.php",{date: date}, function(result){
+            var ret = $.parseJSON(result);
+            if (ret.code == 0) {
+                window.location.reload();
+            }
+        });
+    }
+
+</script>

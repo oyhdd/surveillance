@@ -34,7 +34,7 @@ class ImgCompare {
         return $is_string ? $result[0] : $result;
     }
 
-    public function checkIsSimilar($img_hash_1,$img_hash_2) {
+    public function checkIsSimilar($img_hash_1, $img_hash_2) {
         if (file_exists($img_hash_1) && file_exists($img_hash_2)) {
             $img_hash_1 = self::doCompare($img_hash_1);
             $img_hash_2 = self::doCompare($img_hash_2);

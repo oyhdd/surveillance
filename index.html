@@ -4,68 +4,112 @@
         <meta charset="utf-8">
         <title>视屏监控系统</title>
     </head>
+    <style type="text/css">
+        .borderstyle {border: 1px solid #b6b6b6;width: 320px;height: 240px;}
+        #camera {float: left;margin:10px;}
+        #canvas {width: 320px;height: 240px;margin:10px;}
+        button{cursor:pointer; margin: 20px 0;background: linear-gradient(to right, #2091cf, #0758f0);color: white;padding: 5px 10px;}
+    </style>
     <body>
-        <div id="my_camera"></div>
-        <img src="" id="img">
-
-        <audio id="player" src="audio/alarm.mp3"  loop="loop"></audio>
+        <div>
+            <div id="camera" class="borderstyle"></div>
+            <canvas id="canvas" class="borderstyle" width="320px" height="240px"></canvas>
+            <div id="showImg"></div>
+            <audio id="player_audio" src="audio/alarm.mp3"  loop="loop"></audio>
+            <button id="play">开始监控</button>
+            <button><a href="pic_list.html" target="_blank" style="text-decoration : none; color: white;">查看监控</a></button>
+        </div>
     </body>
 </html>
 
 <script type="text/javascript" src="js/jquery.min.js"></script>
-<script type="text/javascript" src="js/webcam.min.js"></script>
-<script language="JavaScript">
-    $(document).ready(function(){
-        setInterval(check,1000);
-    });
+<script type="text/javascript" src="js/jQuery-webcam-master/jquery.webcam.js"></script>
+<script type="text/javascript">
 
-    //设置镜头的大小
-    Webcam.set({
-        width: 640,
-        height: 480,
-        image_format: 'jpeg',
-        jpeg_quality: 90,
-        force_flash: true,
-        no_interface_found_text:"未检测到相机的text / html",
-    });
+    $(function () {
+        var w = 320, h = 240;
+        var pos = 0, ctx = null, saveCB, image = [];
 
-    Webcam.attach('#my_camera');
+        var canvas = document.getElementById("canvas");
+        canvas.setAttribute('width', w);
+        canvas.setAttribute('height', h);
+
+        ctx = canvas.getContext("2d");
+        var image = ctx.getImageData(0, 0, w, h);
+
+        saveCB = function (data) {
+            var col = data.split(";");
+            var img = image;
+
+            for (var i = 0; i < w; i++) {
+                var tmp = parseInt(col[i]);
+                img.data[pos + 0] = (tmp >> 16) & 0xff;
+                img.data[pos + 1] = (tmp >> 8) & 0xff;
+                img.data[pos + 2] = tmp & 0xff;
+                img.data[pos + 3] = 0xff;
+                pos += 4;
+            }
+
+            if (pos >= 4 * w * h) {
+                ctx.putImageData(img, 0, 0);
+                $.post("upload.php",{type: "data", image: canvas.toDataURL("image/png")},function(result){
+                    var ret = $.parseJSON(result);
+                    if (ret.code == 0) {
+                        if (ret.data.alarm) {
+                            //告警
+                            alarm()
+                        }
+                    } else {
+                        alert(ret.msg);
+                    }
+                });
+                pos = 0;
+            }
+        };
+
+        $("#camera").webcam({
+            width: w,
+            height: h,
+            mode: "callback",
+            swffile: "js/jQuery-webcam-master/jscam_canvas_only.swf",
+
+            onSave: saveCB,
+
+            onCapture: function () {
+               //捕获图像
+                webcam.save();
+            },
+
+            debug: function (type, string) {
+                //控制台信息
+                // console.log(type + ": " + string);
+            },
+
+            onLoad: function () {
+                // flash 加载完毕执行
+                // console.log('加载完毕！')
+            }
+        });
+
+        $("#play").click(function () {
+            setInterval(check, 1000);
+        });
+
+    });
 
     //拍照
     function check() {
-        Webcam.snap(function(data_uri) {
-            $("#img").attr("src", data_uri);
-        });
-        monitor();
-    }
-
-    //图片检查
-    function monitor() {
-        Webcam.upload($("#img").attr("src"), 'monitor.php', function(code, result) {
-            var ret = $.parseJSON(result);
-            if (code == 200) {
-                if (ret.code == 0) {
-                    if (ret.data.alarm) {
-                        //告警
-                        alarm();
-                    }
-                } else {
-                    alert(ret.msg);
-                }
-            } else {
-                alert('系统错误！');
-            }
-        });
+        webcam.capture();
     }
 
     //播放告警音60秒
     function alarm() {
-        var player = $("#player")[0]; /*jquery对象转换成js对象*/
+        var player = $("#player_audio")[0]; /*jquery对象转换成js对象*/
         if (player.paused){ /*如果已经暂停*/
             player.play(); /*播放*/
             setTimeout(function(){
                 player.pause();
-            },10000);
+            }, 5000);
         }
     }
 </script>
