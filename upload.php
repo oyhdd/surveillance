@@ -43,7 +43,7 @@ if (is_file($last_file)) {
 //告警
 $alarm = false;
 //相似度超过2，保存图片至pics/warning
-if ($similar > 2) {
+if ($similar > 1) {
     if (!is_dir($warning_path)){
         mkdir($warning_path, 0777, true);
     }

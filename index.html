@@ -11,6 +11,13 @@
         button{cursor:pointer; margin: 20px 0;background: linear-gradient(to right, #2091cf, #0758f0);color: white;padding: 5px 10px;}
     </style>
     <body>
+        <p>
+            1.点击"允许"，开启摄像头功能。</br>
+            2.点击"开始监控"按钮，运行视频监控系统，左侧为实时场景，右侧为抓拍到的场景。</br>
+            3.若场景中有物体移动，则会发出告警声，并且自动保存图片，点击"查看监控"可回查监控到的画面。</br>
+            4.在“查看监控”页面可删除已保存的监控画面。
+            5.刷新或关闭页面可关闭监控系统。
+        </p>
         <div>
             <div id="camera" class="borderstyle"></div>
             <canvas id="canvas" class="borderstyle" width="320px" height="240px"></canvas>
@@ -57,7 +64,7 @@
                     if (ret.code == 0) {
                         if (ret.data.alarm) {
                             //告警
-                            alarm()
+                            alarm();
                         }
                     } else {
                         alert(ret.msg);

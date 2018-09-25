@@ -5,7 +5,7 @@ $date = $_POST['date'];
 
 $path = "pics/warning/";
 if ($date == 'all') {
-    del_dir($path);
+    del_dir('pics/');
 } elseif (date("Y-m-d", strtotime($date)) === $date) {
     del_dir($path.$date."/");
 }
